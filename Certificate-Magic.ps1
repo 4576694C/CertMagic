@@ -104,14 +104,14 @@ function Set-ArchivedFlagAll
                         GUI
                     }
                 $choice = $choice-1
-                $selected = (($toArchive | select subject,issuer,notafter,SerialNumber))[$choice]
+                $selected = (($toArchive | select subject,issuer,notafter,ThumbPrint))[$choice]
                 if (!$selected){write-Host "Invalid entry" -ForegroundColor yellow ;Pause;GUI}
                 Write-Host $selected -ForegroundColor Yellow
                 $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
                 if ($proceed -match "[yY]")
                     {
-                        #foreach ($cert in $personalStore.certificates |  where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)}){$cert.Archived=$true}
-                        Write-host "Certificates Archived."
+                        foreach ($cert in $personalStore.certificates |  where {$_.ThumbPrint -eq $selected.Thumbprint})  { $cert.Archived=$true }
+                        Write-host "Certificates Archived." -ForegroundColor Green
                     }
             }               
         else
@@ -136,7 +136,7 @@ Function Renew-Certificate {
                         Sort-Object notAfter | 
                         Out-GridView -PassThru -Title "Choose cert to renew"
     #renewal part
-    &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')
+   
     
     #>
     
@@ -145,6 +145,7 @@ Function Renew-Certificate {
     $array = New-object system.collections.generic.list[system.object]
     $certs = Get-childItem cert:\LocalMachine\My | 
             Select-Object * |
+            where notafter -gt (get-date).AddMinutes(1) |
             Sort-Object notafter
     $count = 1; 
     foreach ($cert in $certs) 
@@ -177,6 +178,7 @@ Function Renew-Certificate {
     if ($proceed -match "[yY]")
         {
             Write-host "Renewing" $selected.serialnumber
+            &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')
             Pause
             GUI
         }
