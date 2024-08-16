@@ -43,7 +43,7 @@ Function Open-CertStore
     )
     $personalStore = Get-Item cert:\LocalMachine\My 
     $personalStore.Open('ReadWrite,IncludeArchived') 
-    $personalStore.Certificates | Select Thumbprint, Subject, Archived, NotAfter | sort NotAfter -Descending
+    $personalStore.Certificates | Select-Object Thumbprint, Subject, Archived, NotAfter | Sort-Object NotAfter -Descending
 }   
 
 
@@ -58,7 +58,7 @@ function Get-AllCerts
     PS> Get-AllCerts 
 #>
     
-    Open-CertStore | ft
+    Open-CertStore | Format-Table
     Pause
 }
 
@@ -71,7 +71,7 @@ function Get-ExpiredCerts
     .EXAMPLE
     PS> Get-ExpiredCerts 
 #>
-    $expired = Open-CertStore | where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)} | ft
+    $expired = Open-CertStore | Where-Object {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)} | Format-Table
     if ($expired.count -ne 0)
         {
             $expired
@@ -93,15 +93,15 @@ function Set-ArchivedFlagAll
 #>
     $personalStore = Get-Item cert:\LocalMachine\My 
     $personalStore.Open('ReadWrite,IncludeArchived') 
-    $toArchive = $personalStore.certificates | where {$_.Archived -eq $False -AND $_.notAfter -lt (Get-Date)}
+    $toArchive = $personalStore.certificates | Where-Object {$_.Archived -eq $False -AND $_.notAfter -lt (Get-Date)}
     if (($toArchive.count) -ne 0)
         {
             Write-Host "`nThe following certs will be archived:"`n 
-            $toArchive | select Subject, notafter,thumbprint | ft -HideTableHeaders
+            $toArchive | Select-Object Subject, notafter,thumbprint | Format-Table -HideTableHeaders
             $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
             if ($proceed -match "[yY]")
                 {
-                    foreach ($cert in $personalStore.certificates |  where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)}){$cert.Archived=$true}
+                    foreach ($cert in $personalStore.certificates |  Where-Object {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)}){$cert.Archived=$true}
                     Write-host "Certificates Archived." -ForegroundColor Green
                 }
         }               
@@ -125,7 +125,7 @@ function Set-ArchivedFlagSpecific
     $count = 1
     $personalStore = Get-Item cert:\LocalMachine\My 
     $personalStore.Open('ReadWrite,IncludeArchived') 
-    $toArchive = $personalStore.certificates | where {$_.Archived -eq $False -AND $_.notAfter -lt (Get-Date)}
+    $toArchive = $personalStore.certificates | Where-Object {$_.Archived -eq $False -AND $_.notAfter -lt (Get-Date)}
     if (($toArchive.count) -ne 0)
         {
             foreach ($cert in $toarchive)
@@ -145,13 +145,13 @@ function Set-ArchivedFlagSpecific
                     GUI
                 }
             $choice = $choice-1
-            $selected = (($toArchive | select subject,issuer,notafter,ThumbPrint))[$choice]
+            $selected = (($toArchive | Select-Object subject,issuer,notafter,ThumbPrint))[$choice]
             if (!$selected){write-Host "Invalid entry" -ForegroundColor yellow ;Pause;GUI}
             Write-Host $selected -ForegroundColor Yellow
             $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
             if ($proceed -match "[yY]")
                 {
-                    foreach ($cert in $personalStore.certificates |  where {$_.ThumbPrint -eq $selected.Thumbprint})  { $cert.Archived=$true }
+                    foreach ($cert in $personalStore.certificates |  Where-Object {$_.ThumbPrint -eq $selected.Thumbprint})  { $cert.Archived=$true }
                     Write-host "Certificates Archived." -ForegroundColor Green
                 }
         }               
@@ -177,7 +177,7 @@ Function Renew-Certificate
     $array = New-object system.collections.generic.list[system.object]
     $certs = Get-childItem cert:\LocalMachine\My | 
             Select-Object * |
-            where notafter -gt (get-date).AddMinutes(1) |
+            Where-Object notafter -gt (get-date).AddMinutes(1) |
             Sort-Object notafter
     $count = 1; 
     foreach ($cert in $certs) 
@@ -203,7 +203,7 @@ Function Renew-Certificate
     }
     $choice = $choice-1
     
-    $selected = (($certs | select subject,issuer,notafter,SerialNumber))[$choice]
+    $selected = (($certs | Select-Object subject,issuer,notafter,SerialNumber))[$choice]
     if (!$selected)
         {
             write-Host "Invalid entry" -ForegroundColor yellow
