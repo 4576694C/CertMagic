@@ -1,4 +1,4 @@
-function Admin-Check 
+Function Admin-Check 
 {
 	<#
 	.SYNOPSIS
