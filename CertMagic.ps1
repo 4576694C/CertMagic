@@ -216,6 +216,56 @@ Function Renew-Certificate
     Pause
 }
 
+Function Open-CertStore 
+{
+<#
+    .SYNOPSIS
+    Open-CertStore - used to open certificate store to view all certificates including archived ones.
+           
+    .PARAMETER personalStore
+    Output of query passed to other functions
+    .EXAMPLE
+	PS> Open-CertStore
+    
+#>
+    [CmdletBinding()]
+    param (
+        $personalStore
+    )
+    $personalStore = Get-Item cert:\LocalMachine\My 
+    $personalStore.Open('ReadWrite,IncludeArchived') 
+    $personalStore.Certificates | Select-Object Thumbprint, Subject, Archived, NotAfter | Sort-Object NotAfter -Descending
+}   
+
+
+
+function get-SCOMCert 
+    {
+
+        if (test-path ("HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings"))
+        {
+            $thumb = (get-itemproperty "HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings\").channelcertificatehash  
+            if ($null -ne $thumb)            {
+                $serial = ((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings\").ChannelCertificateSerialNumber | ForEach-Object { '{0:X2}' -f $_ })
+                [array]::Reverse($serial)
+                $serial = $serial -join ''
+                Open-CertStore | ? thumbprint -eq $thumb
+            }
+            else
+            {
+            "SCOM installed, but no certificate info found in registry"
+            }
+        }
+        else
+        {
+            "SCOM not istalled."
+        }
+        
+        }
+
+        
+
+
 function Get-DummyCert 
 {
 <#
