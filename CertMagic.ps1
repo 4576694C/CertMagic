@@ -270,7 +270,7 @@ Function Renew-Certificate
         if ($proceed -match "[yY]")
             {
                 Write-host "Renewing" $selected.serialnumber
-                &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')    
+                &certreq @('-Enroll', '-machine', '-q', '-cert', $selected.SerialNumber, 'Renew', 'ReuseKeys')    
             }
         }    
             Pause
