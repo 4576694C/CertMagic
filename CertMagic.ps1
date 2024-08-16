@@ -139,11 +139,14 @@ function Set-ArchivedFlagSpecific
                 {
                     write-Host "Invalid entry" -ForegroundColor yellow
                     Pause
-                    GUI
                 }
             $choice = $choice-1
             $selected = (($toArchive | Select-Object subject,issuer,notafter,ThumbPrint))[$choice]
-            if (!$selected){write-Host "Invalid entry" -ForegroundColor yellow ;Pause;GUI}
+            if (!$selected)
+                {
+                    write-Host "Invalid entry" -ForegroundColor yellow
+                    Pause
+                }
             Write-Host $selected -ForegroundColor Yellow
             $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
             if ($proceed -match "[yY]")
@@ -189,7 +192,6 @@ function Remove-ArchivedFlag
                 {
                     write-Host "Invalid entry" -ForegroundColor yellow
                     Pause
-                    GUI
                 }
             $choice = $choice-1
             $selected = (($toArchive | Select-Object subject,issuer,notafter,ThumbPrint))[$choice]
@@ -365,10 +367,10 @@ GUI
             Write-Host    "# 2 - List Expired Certificates           #" -ForegroundColor DarkCyan
             Write-Host    "# 3 - Archive All Expired Certificates    #" -ForegroundColor DarkCyan
             Write-Host    "# 4 - Archive Specific Expired Cert       #" -ForegroundColor DarkCyan
-            Write-Host    "# 5 - Restore archived certificate        #" -ForegroundColor DarkCyan
+            Write-Host    "# 5 - Restore Archived Certificate        #" -ForegroundColor DarkCyan
             Write-Host    "# 6 - Renew Certificate with the same key #" -ForegroundColor DarkCyan
-            Write-Host    "# 7 - Search for SCOM certificate         #" -ForegroundColor DarkCyan
-            Write-Host    "# 8 - Create dummy cert                   #" -ForegroundColor DarkCyan
+            Write-Host    "# 7 - Search for SCOM Certificate         #" -ForegroundColor DarkCyan
+            Write-Host    "# 8 - Create dummy Certificate            #" -ForegroundColor DarkCyan
             Write-Host    "# 0 - Exit                                #" -ForegroundColor DarkCyan
             Write-Host    "#                                         #" -ForegroundColor DarkCyan
             Write-Host    "###########################################" -ForegroundColor DarkCyan
