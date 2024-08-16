@@ -239,29 +239,41 @@ Function Open-CertStore
 
 
 
-function get-SCOMCert 
-    {
+function Get-SCOMCert 
+{
+<#
+.SYNOPSIS
+Used to check which (if any) cert is used for SCOM monitoring
 
-        if (test-path ("HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings"))
+.EXAMPLE
+PS> Get-SCOMCert 
+
+.NOTES
+Way to get serial number that for some reason is written backwards in registry:
+
+$serial = ((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings\").ChannelCertificateSerialNumber | ForEach-Object { '{0:X2}' -f $_ })
+[array]::Reverse($serial)
+$serial = $serial -join ''
+
+#>
+
+    if (test-path ("HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings"))
         {
             $thumb = (get-itemproperty "HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings\").channelcertificatehash  
-            if ($null -ne $thumb)            {
-                $serial = ((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Microsoft Operations Manager\3.0\Machine Settings\").ChannelCertificateSerialNumber | ForEach-Object { '{0:X2}' -f $_ })
-                [array]::Reverse($serial)
-                $serial = $serial -join ''
-                Open-CertStore | ? thumbprint -eq $thumb
-            }
+            if ($null -ne $thumb)            
+                {
+                    Open-CertStore | Where-Object thumbprint -eq $thumb
+                }
             else
-            {
-            "SCOM installed, but no certificate info found in registry"
-            }
+                {
+                    Write-Host "SCOM installed, but no certificate info found in registry." -ForegroundColor Yellow
+                }
         }
-        else
+    else
         {
-            "SCOM not istalled."
-        }
-        
-        }
+            Write-Host "SCOM not istalled." -ForegroundColor Yellow
+        }  
+}
 
         
 
@@ -319,7 +331,8 @@ GUI
             Write-Host    "# 3 - Archive All Expired Certificates    #" -ForegroundColor DarkCyan
             Write-Host    "# 4 - Archive Specific Expired Cert       #" -ForegroundColor DarkCyan
             Write-Host    "# 5 - Renew Certificate with the same key #" -ForegroundColor DarkCyan
-            Write-Host    "# 6 - Create dummy cert                   #" -ForegroundColor DarkCyan
+            Write-Host    "# 6 - Search for SCOM certificate         #" -ForegroundColor DarkCyan
+            Write-Host    "# 7 - Create dummy cert                   #" -ForegroundColor DarkCyan
             Write-Host    "# 0 - Exit                                #" -ForegroundColor DarkCyan
             Write-Host    "#                                         #" -ForegroundColor DarkCyan
             Write-Host    "###########################################" -ForegroundColor DarkCyan
@@ -332,7 +345,8 @@ GUI
                     3 { Set-ArchivedFlagAll}
                     4 { Set-ArchivedFlagSpecific}
                     5 { Renew-Certificate }
-                    6 { Get-Dummycert }
+                    6 { Get-SCOMCert }
+                    7 { Get-Dummycert }
                     0 { Break }
                     Default {"Invalid Selection - Exiting";Break}
                 }    
