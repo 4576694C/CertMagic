@@ -80,8 +80,48 @@ function Set-ArchivedFlagAll
 
     function Set-ArchivedFlagSpecific 
     {
-        # to be done
+        $array = New-object system.collections.generic.list[system.object]
+        $count = 1
+        $personalStore = Get-Item cert:\LocalMachine\My 
+        $personalStore.Open('ReadWrite,IncludeArchived') 
+        $toArchive = $personalStore.certificates | where {$_.Archived -eq $False -AND $_.notAfter -lt (Get-Date)}
+        if (($toArchive.count) -ne 0)
+            {
+                foreach ($cert in $toarchive)
+                    {
+                        $array.add(($cert | Select-Object `
+                        @{name = '#'; expression = { $count }},subject,issuer,notafter))
+                        $count++ 
+                    }
+                $array | Out-host
+                try {
+                        [int]$choice = read-host 'Choose cert to renew (1-99): ' -ErrorAction Stop
+                    }
+                catch 
+                    {
+                        write-Host "Invalid entry" -ForegroundColor yellow
+                        Pause
+                        GUI
+                    }
+                $choice = $choice-1
+                $selected = (($toArchive | select subject,issuer,notafter,SerialNumber))[$choice]
+                if (!$selected){write-Host "Invalid entry" -ForegroundColor yellow ;Pause;GUI}
+                Write-Host $selected -ForegroundColor Yellow
+                $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
+                if ($proceed -match "[yY]")
+                    {
+                        #foreach ($cert in $personalStore.certificates |  where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)}){$cert.Archived=$true}
+                        Write-host "Certificates Archived."
+                    }
+            }               
+        else
+            {
+                Write-Host "No expired certificates detected!" -ForegroundColor Yellow
+            }
+            Pause
+            gui 
     }
+    
 
 
 Function Renew-Certificate {
@@ -146,6 +186,12 @@ Function Renew-Certificate {
         }
     }
 
+function get-dummycert {
+    New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -DnsName "dummy.dummylabs" -FriendlyName "dummy" -NotAfter (get-date) -Verbose
+    Pause
+    GUI
+}
+
 function GUI {
     Write-Host    "###########################################" -ForegroundColor DarkCyan
     Write-Host    "#            CERT MAGIC 101               #" -ForegroundColor DarkCyan
@@ -156,6 +202,7 @@ function GUI {
     Write-Host    "# 3 - Archive All Expired Certificates    #" -ForegroundColor DarkCyan
     Write-Host    "# 4 - Archive Specific Expired Cert       #" -ForegroundColor DarkCyan
     Write-Host    "# 5 - Renew Certificate with the same key #" -ForegroundColor DarkCyan
+    Write-Host    "# 6 - Create dummy cert                   #" -ForegroundColor DarkCyan
     Write-Host    "# 0 - Exit                                #" -ForegroundColor DarkCyan
     Write-Host    "#                                         #" -ForegroundColor DarkCyan
     Write-Host    "###########################################" -ForegroundColor DarkCyan
@@ -168,6 +215,7 @@ function GUI {
             3 { Set-ArchivedFlagAll}
             4 { Set-ArchivedFlagSpecific}
             5 { Renew-Certificate }
+            6 { Get-Dummycert }
             0 { Break }
             Default {"Invalid Selection - Exiting";Break}
         }    
