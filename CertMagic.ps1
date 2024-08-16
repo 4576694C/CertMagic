@@ -158,7 +158,61 @@ function Set-ArchivedFlagSpecific
         }
     Pause
 }
+
+function Remove-ArchivedFlag 
+{
+<#
+    .SYNOPSIS
+    Remove-ArchivedFlag - used to un-archive a selected expired certificate.
     
+    .EXAMPLE
+    PS> Remove-ArchivedFlag 
+#>
+    $array = New-object system.collections.generic.list[system.object]
+    $count = 1
+    $personalStore = Get-Item cert:\LocalMachine\My 
+    $personalStore.Open('ReadWrite,IncludeArchived') 
+    $toArchive = $personalStore.certificates | Where-Object {$_.Archived -eq $true}
+    if (($toArchive.count) -ne 0)
+        {
+            foreach ($cert in $toarchive)
+                {
+                    $array.add(($cert | Select-Object `
+                    @{name = '#'; expression = { $count }},subject,issuer,notafter))
+                    $count++ 
+                }
+            $array | Out-host
+            try {
+                    [int]$choice = read-host 'Choose cert to un-archive (1-99): ' -ErrorAction Stop
+                }
+            catch 
+                {
+                    write-Host "Invalid entry" -ForegroundColor yellow
+                    Pause
+                    GUI
+                }
+            $choice = $choice-1
+            $selected = (($toArchive | Select-Object subject,issuer,notafter,ThumbPrint))[$choice]
+            if (!$selected)
+                {
+                    write-Host "Invalid entry" -ForegroundColor yellow
+                    Pause
+                }
+            Write-Host $selected -ForegroundColor Yellow
+            $proceed = Read-Host "Do you wish to proceed (Y/N) ?"
+            if ($proceed -match "[yY]")
+                {
+                    foreach ($cert in $personalStore.certificates |  Where-Object {$_.ThumbPrint -eq $selected.Thumbprint})  { $cert.Archived=$false }
+                    Write-host "Certificate UnArchived." -ForegroundColor Green
+                }
+        }               
+    else
+        {
+            Write-Host "No Archived certificates found" -ForegroundColor Yellow
+        }
+    Pause
+}
+
 Function Renew-Certificate 
 {
 <#
@@ -176,6 +230,7 @@ Function Renew-Certificate
             Select-Object * |
             Where-Object notafter -gt (get-date).AddMinutes(1) |
             Sort-Object notafter
+
     $count = 1; 
     foreach ($cert in $certs) 
         { 
@@ -310,9 +365,10 @@ GUI
             Write-Host    "# 2 - List Expired Certificates           #" -ForegroundColor DarkCyan
             Write-Host    "# 3 - Archive All Expired Certificates    #" -ForegroundColor DarkCyan
             Write-Host    "# 4 - Archive Specific Expired Cert       #" -ForegroundColor DarkCyan
-            Write-Host    "# 5 - Renew Certificate with the same key #" -ForegroundColor DarkCyan
-            Write-Host    "# 6 - Search for SCOM certificate         #" -ForegroundColor DarkCyan
-            Write-Host    "# 7 - Create dummy cert                   #" -ForegroundColor DarkCyan
+            Write-Host    "# 5 - Restore archived certificate        #" -ForegroundColor DarkCyan
+            Write-Host    "# 6 - Renew Certificate with the same key #" -ForegroundColor DarkCyan
+            Write-Host    "# 7 - Search for SCOM certificate         #" -ForegroundColor DarkCyan
+            Write-Host    "# 8 - Create dummy cert                   #" -ForegroundColor DarkCyan
             Write-Host    "# 0 - Exit                                #" -ForegroundColor DarkCyan
             Write-Host    "#                                         #" -ForegroundColor DarkCyan
             Write-Host    "###########################################" -ForegroundColor DarkCyan
@@ -324,9 +380,10 @@ GUI
                     2 { Get-ExpiredCerts}
                     3 { Set-ArchivedFlagAll}
                     4 { Set-ArchivedFlagSpecific}
-                    5 { Renew-Certificate }
-                    6 { Get-SCOMCert }
-                    7 { Get-Dummycert }
+                    5 { Remove-ArchivedFlag }
+                    6 { Renew-Certificate }
+                    7 { Get-SCOMCert }
+                    8 { Get-Dummycert }
                     0 { Break }
                     Default {"Invalid Selection - Exiting";Break}
                 }    
