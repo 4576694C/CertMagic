@@ -191,54 +191,33 @@ Function Renew-Certificate
     $array | Out-Host
     try 
         {
-            [int]$choice = read-host 'Choose cert to renew (1-99): ' -ErrorAction Stop
+            [int]$choice = read-host 'Choose cert to renew (1-99). 0 to exit' -ErrorAction Stop
         }
     catch 
     {
         write-Host "Invalid entry" -ForegroundColor yellow
         Pause
     }
-    $choice = $choice-1
-    
-    $selected = (($certs | Select-Object subject,issuer,notafter,SerialNumber))[$choice]
-    if (!$selected)
-        {
-            write-Host "Invalid entry" -ForegroundColor yellow
+    if ($choice -ne '0')
+    {
+        $choice = $choice-1
+        
+        $selected = (($certs | Select-Object subject,issuer,notafter,SerialNumber))[$choice]
+        if (!$selected)
+            {
+                write-Host "Invalid entry" -ForegroundColor yellow
+                Pause
+            }
+        Write-Host $selected -ForegroundColor Yellow
+        $proceed = Read-Host "Has been chosen to be renewed, proceed (Y/N) ?"
+        if ($proceed -match "[yY]")
+            {
+                Write-host "Renewing" $selected.serialnumber
+                &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')    
+            }
+        }    
             Pause
-        }
-    Write-Host $selected -ForegroundColor Yellow
-    $proceed = Read-Host "Has been chosen to be renewed, proceed (Y/N) ?"
-    if ($proceed -match "[yY]")
-        {
-            Write-host "Renewing" $selected.serialnumber
-            &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')    
-        }
-    Pause
 }
-
-Function Open-CertStore 
-{
-<#
-    .SYNOPSIS
-    Open-CertStore - used to open certificate store to view all certificates including archived ones.
-           
-    .PARAMETER personalStore
-    Output of query passed to other functions
-    .EXAMPLE
-	PS> Open-CertStore
-    
-#>
-    [CmdletBinding()]
-    param (
-        $personalStore
-    )
-    $personalStore = Get-Item cert:\LocalMachine\My 
-    $personalStore.Open('ReadWrite,IncludeArchived') 
-    $personalStore.Certificates | Select-Object Thumbprint, Subject, Archived, NotAfter | Sort-Object NotAfter -Descending
-}   
-
-
-
 function Get-SCOMCert 
 {
 <#
@@ -273,6 +252,7 @@ $serial = $serial -join ''
         {
             Write-Host "SCOM not istalled." -ForegroundColor Yellow
         }  
+    pause
 }
 
         
