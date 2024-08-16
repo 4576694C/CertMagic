@@ -1,7 +1,7 @@
 function Admin-Check {
 	<#
 	.SYNOPSIS
-	check if run as admin 
+	check if run as admin -jak 
 	.EXAMPLE
 		PS> Admin-Check 
 
@@ -42,7 +42,6 @@ Function Open-CertStore
     {
         Open-CertStore | ft
         Pause
-        gui
     }
 
 #show not archived
@@ -51,7 +50,6 @@ function Get-ExpiredCerts
         $expired = Open-CertStore | where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)} | ft
         if ($expired.count -ne 0){$expired}else{Write-Host "No expired certificates detected!" -ForegroundColor Yellow}
         Pause
-        gui
     }
 #archive all expired
 function Set-ArchivedFlagAll 
@@ -67,7 +65,7 @@ function Set-ArchivedFlagAll
                 if ($proceed -match "[yY]")
                     {
                         foreach ($cert in $personalStore.certificates |  where {$_.Archived -eq $False -and $_.notAfter -lt (Get-Date)}){$cert.Archived=$true}
-                        Write-host "Certificates Archived."
+                        Write-host "Certificates Archived." -ForegroundColor Green
                     }
             }               
         else
@@ -75,7 +73,6 @@ function Set-ArchivedFlagAll
                 Write-Host "No expired certificates detected!" -ForegroundColor Yellow
             }
             Pause
-            gui 
     }
 
     function Set-ArchivedFlagSpecific 
@@ -119,7 +116,6 @@ function Set-ArchivedFlagAll
                 Write-Host "No expired certificates detected!" -ForegroundColor Yellow
             }
             Pause
-            gui 
     }
     
 
@@ -167,7 +163,6 @@ Function Renew-Certificate {
     {
         write-Host "Invalid entry" -ForegroundColor yellow
         Pause
-        GUI
     }
     $choice = $choice-1
     
@@ -180,11 +175,10 @@ Function Renew-Certificate {
             Write-host "Renewing" $selected.serialnumber
             &certreq @('-Enroll', '-machine', '-q', '-cert', $certToRenew.SerialNumber, 'Renew', 'ReuseKeys')
             Pause
-            GUI
         }
     else
         {
-            GUI
+            Pause
         }
     }
 
@@ -196,12 +190,15 @@ function get-dummycert {
         $FriendlyName = "dummy",
         $NotAfter = (get-date)
     )
-    New-SelfSignedCertificate -CertStoreLocation $CertStoreLocation -DnsName $DnsName -FriendlyName $FriendlyName -NotAfter $NotAfter -Verbose
+    New-SelfSignedCertificate -CertStoreLocation $CertStoreLocation -DnsName $DnsName -FriendlyName $FriendlyName -NotAfter $NotAfter -Verbose | out-host
     Pause
-    GUI
 }
 
 function GUI {
+
+    while ($menu -ne 0) {
+        
+  
     Write-Host    "###########################################" -ForegroundColor DarkCyan
     Write-Host    "#            CERT MAGIC 101               #" -ForegroundColor DarkCyan
     Write-Host    "###########################################" -ForegroundColor DarkCyan
@@ -228,7 +225,7 @@ function GUI {
             0 { Break }
             Default {"Invalid Selection - Exiting";Break}
         }    
-
+    }
 }
 
 
