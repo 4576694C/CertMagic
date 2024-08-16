@@ -15,12 +15,9 @@ Function Admin-Check
         Write-Host ""
         Write-Host "Error information below:"
         Write-Host ""
-    
         $_ | Format-List * -Force | Out-String -Stream | Write-Host -ForegroundColor Yellow
-    
         Write-Host ""
-    
-        throw "Could not determine wether current context is elevated or not!: 0x{0:x} - {1}" -f $_.Exception.HResult, $_.Exception.Message
+        throw "Could not determine whether current context is elevated or not!: 0x{0:x} - {1}" -f $_.Exception.HResult, $_.Exception.Message
     }
 }
 
@@ -264,7 +261,7 @@ GUI
     while ($menu -ne 0) 
         {
             Write-Host    "###########################################" -ForegroundColor DarkCyan
-            Write-Host    "#            CERT MAGIC 101               #" -ForegroundColor DarkCyan
+            Write-Host    "#            CERT MAGIC TOOL              #" -ForegroundColor DarkCyan
             Write-Host    "###########################################" -ForegroundColor DarkCyan
             Write-Host    "#                                         #" -ForegroundColor DarkCyan
             Write-Host    "# 1 - List All Certificates               #" -ForegroundColor DarkCyan
