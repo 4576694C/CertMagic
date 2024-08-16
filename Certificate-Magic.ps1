@@ -187,7 +187,14 @@ Function Renew-Certificate {
     }
 
 function get-dummycert {
-    New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -DnsName "dummy.dummylabs" -FriendlyName "dummy" -NotAfter (get-date) -Verbose
+    [CmdletBinding()]
+    param (
+        $CertStoreLocation = "Cert:\LocalMachine\My",
+        $DnsName = "dummy.dummylabs",
+        $FriendlyName = "dummy",
+        $NotAfter = (get-date)
+    )
+    New-SelfSignedCertificate -CertStoreLocation $CertStoreLocation -DnsName $DnsName -FriendlyName $FriendlyName -NotAfter $NotAfter -Verbose
     Pause
     GUI
 }
