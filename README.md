@@ -1,2 +1,2 @@
-# Certificates
-Tool to do magic with certificates
+# CertMagic
+Tool to do magic with certificates using powershell
